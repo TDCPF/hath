@@ -21,7 +21,7 @@ ENV HatH_ARCHIVE hath.zip
 ENV HatH_JAR HentaiAtHome.jar
 # Hentai@Home parameters: https://ehwiki.org/wiki/Hentai@Home#Software
 # --Xmx????m is arg for java, not jar
-ENV HatH_ARGS --disable_logging --port=$HatH_PORT
+ENV HatH_ARGS --disable_logging
 
 # Container Setup
 RUN adduser -D "$HatH_USER"
@@ -50,4 +50,4 @@ EXPOSE "$HatH_PORT"
 
 # CMD use with ENTRYPOINT
 # write credential $HatH_ID-$HatH_KEY data/client_login
-CMD echo -n $HatH_ID-${HatH_KEY} > $HatH_PATH/data/client_login && java -jar "$HatH_JAR" $HatH_ARGS
+CMD echo -n $HatH_ID-${HatH_KEY} > $HatH_PATH/data/client_login && java -jar "$HatH_JAR" --port=$HatH_PORT $HatH_ARGS
