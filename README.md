@@ -35,7 +35,7 @@ But from the mechanism docker works and also for a better experience, link sever
 
 One-liner shell command:
 ```
-docker run (-it if you like to interact with it) (--rm if you want remove the container after it's stopped) --env HatH_ID=***** -e HatH_KEY=***** (--env-list if you'd like to manage environment variables with list file) imageid (command like sh if you want to debug in interactive shell)
+docker run (-it if you like to interact with it) (--rm if you want remove the container after it's stopped) (-v /path/of/real/environment:/path/in/docker) --env HatH_ID=***** -e HatH_KEY=***** (--env-list if you'd like to manage environment variables with list file) imageid (command like sh if you want to debug in interactive shell)
 ```
 
 Synology Docker:  
