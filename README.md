@@ -29,10 +29,10 @@ https://hub.docker.com/r/tdcpf/hath
 
 ## Basic usage:
 Using docker image in a VM-like docker way (instead of "designed way" docker should be used), most files can be store in the container directly.
-But from the mechanism docker works and also for a better experience, link several volumes to external storage will be recommended:
+But according to the mechanism how docker works and also for a better experience, link several volumes to external storage will be recommended:
 - Volumes to link:
   - cache: Since the "static range" (the data your client responsible for) is distributed by HatH network, keeping the cache data is essential behavior of a good/healthy client. You can't even start the client once your cache isn't match the static zone you've been assigned for. The only solution is going to the dashboard and reset the statice zone of your client. Therefore linking cache folder out of the container is recommend.
-  - download: If you're going to use the Archive Downloader feature, linking this folder out will make it easier to reach downloaded content.
+  - download: If you're going to use the "Archive Downloader" feature, linking this folder outside will make it easier to reach downloaded content.
 - Fill ENV
   - HatH_ID: Bring the exact ID to container.
   - HatH_KEY: Bring the exact KEY to container.
