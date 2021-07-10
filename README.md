@@ -53,13 +53,13 @@ docker run (-it if you like to interact with it) (--rm if you want remove the co
 Prerequisite:
 If you'd like to benefit from keeping cache files reusable and get "Archive Downloader" result directly, you'll need to have two (one for cache and one for download) target folder which provides full permission to "Everyone" group.  
 (Because the service inside the container use uid 1000 to I/O by default. Limit permission to read/write only may success too but I haven't tried this way.)  
-(Setting owner to 1000(Only via SSH shell) and set Owner required permission is also an option if you do understand what is it and how to do it.)  
+(Setting owner to 1000(Only doable via SSH shell) and set Owner required permission is also an option if you do understand what it is and how to do it.)  
 If you don't, you don't need to bother this and even the "mount volume" part below.
 
 1. Download image from registry tab, search "tdcpf" and double click on "tdcpf/hath", use latest tag is suggested for further update purpose. 
-2. Deploy from image tab, choose your preferred configuartion and fill the ENV and setup the mount volume (must start with /home/hath/client/ if you didn't change HatH_PATH), host network is preferred if you don't know anything about docker networking.
+2. Deploy from image tab, choose your preferred configuartion and fill the ENV and setup the mount volume (must start with `/home/hath/client/` if you didn't change HatH_PATH), host network is preferred if you don't know anything about docker networking.
 3. Start from container tab and ta-da!
 
-Now you should be able to watch client log in container management interface, and soon the client should be online in your HatH dashboard in few minutes.
+Now you should be able to get client log in container management interface, and soon the client should be online in your HatH dashboard in few minutes.
 
 (TODO: step by step docs)
