@@ -1,6 +1,6 @@
 # H@H Docker image prepared by TDCPF
 A simple container of [Hentai@Home](https://ehwiki.org/wiki/Hentai@Home) based on openjdk image and one-liner shell script only.
-Had been verified in Synology Docker environment, should be no problem in others.
+Had been verified in Docker environment of Synology DSM, should be no problem in others.
 
 
 ## ENV explanation:
@@ -50,6 +50,7 @@ docker run (-it if you like to interact with it) (--rm if you want remove the co
 
 ### Docker@DSM (Synology Docker): 
 *** Verified on DSM 7.0 *** , works like a charm.
+
 Prerequisite:
 If you'd like to benefit from keeping cache files reusable and get "Archive Downloader" result directly, you'll need to have two (one for cache and one for download) target folder which provides full permission to "Everyone" group.  
 (Because the service inside the container use uid 1000 to I/O by default. Limit permission to read/write only may success too but I haven't tried this way.)  
