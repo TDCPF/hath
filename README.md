@@ -2,6 +2,7 @@
 A simple container of [Hentai@Home](https://ehwiki.org/wiki/Hentai@Home) based on openjdk image and one-liner shell script only.
 Had been verified in Synology Docker environment, should be no problem in others.
 
+
 ## ENV explanation:
 - Build related:
   - HatH_VERSION: HatH version used to composite downloading URL and note. It should be x.y.z most of time.
@@ -18,14 +19,17 @@ Had been verified in Synology Docker environment, should be no problem in others
   - HatH_JAR: The filename which HatH client is (inside the archive).
   - HatH_ARGS: The parameter which will be used after HatH client. The list can be found at [Hentai@Home wiki](https://ehwiki.org/wiki/Hentai@Home#Software)
 
+
 ## Self build:
 ```
 docker build -t hath:tagwhateveryoulike ./
 ```
 
+
 ## Or you can use mine  
 Which is built by Docker Hub according to this repository.  
 https://hub.docker.com/r/tdcpf/hath
+
 
 ## Basic usage:
 Using docker image in a VM-like docker way (instead of "designed way" docker should be used), most files can be store in the container directly.
@@ -37,11 +41,25 @@ But according to the mechanism how docker works and also for a better experience
   - HatH_ID: Bring the exact ID to container.
   - HatH_KEY: Bring the exact KEY to container.
 
-One-liner shell command:
+
+### One-liner shell command:
 ```
 docker run (-it if you like to interact with it) (--rm if you want remove the container after it's stopped) (-v /path/of/real/environment:/path/in/docker) --env HatH_ID=***** -e HatH_KEY=***** (--env-list if you'd like to manage environment variables with list file) imageid (command like sh if you want to debug in interactive shell)
 ```
 
-Synology Docker:  
-Download image from registry and deploy, fill the ENV and setup the volume link and start. Ta-da!  
-(TODO: step by step screenshot)
+
+### Docker@DSM (Synology Docker): 
+*** Verified on DSM 7.0 *** , works like a charm.
+Prerequisite:
+If you'd like to benefit from keeping cache files reusable and get "Archive Downloader" result directly, you'll need to have two (one for cache and one for download) target folder which provides full permission to "Everyone" group.  
+(Because the service inside the container use uid 1000 to I/O by default. Limit permission to read/write only may success too but I haven't tried this way.)  
+(Setting owner to 1000(Only via SSH shell) and set Owner required permission is also an option if you do understand what is it and how to do it.)  
+If you don't, you don't need to bother this and even the "mount volume" part below.
+
+1. Download image from registry tab, search "tdcpf" and double click on "tdcpf/hath", use latest tag is suggested for further update purpose. 
+2. Deploy from image tab, choose your preferred configuartion and fill the ENV and setup the mount volume (must start with /home/hath/client/ if you didn't change HatH_PATH), host network is preferred if you don't know anything about docker networking.
+3. Start from container tab and ta-da!
+
+Now you should be able to watch client log in container management interface, and soon the client should be online in your HatH dashboard in few minutes.
+
+(TODO: step by step docs)
