@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM ibmjava:sfj-alpine
 
 LABEL maintainer="notexist@tdcpf.org"
 
