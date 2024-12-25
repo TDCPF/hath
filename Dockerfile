@@ -19,6 +19,7 @@ ENV HatH_USER hath
 ENV HatH_PATH "/home/$HatH_USER/client"
 ENV HatH_ARCHIVE hath.zip
 ENV HatH_JAR HentaiAtHome.jar
+ENV JAVA_TOOL_OPTIONS "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8" 
 # Hentai@Home parameters: https://ehwiki.org/wiki/Hentai@Home#Software
 # --Xmx????m is arg for java, not jar
 ENV HatH_ARGS --disable_logging
