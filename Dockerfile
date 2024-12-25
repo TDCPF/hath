@@ -10,8 +10,8 @@ ENV HatH_KEY 20chars&numscombiKEY
 ENV HatH_PORT 9527
 
 ## Fetch binary
-ENV HatH_VERSION 1.6.3
-ENV HatH_DOWNLOAD_SHA256 55c4360fc3d635e86e08e87aebcda97aecbda3102279d41d753e7452da7c958f
+ENV HatH_VERSION 1.6.4
+ENV HatH_DOWNLOAD_SHA256 25351e4b43169f0bad25abcfe7f61034f03cca08b69f219727713975dc5b03b1
 ENV HatH_DOWNLOAD_URL https://repo.e-hentai.org/hath/HentaiAtHome_$HatH_VERSION.zip
 
 ## Recommend default configuration
