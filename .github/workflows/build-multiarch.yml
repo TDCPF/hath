@@ -1,0 +1,85 @@
+name: Build and Push Multi-Arch Image
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+env:
+  IMAGE_NAME: hath
+  DOCKERHUB_OWNER: tdcpf         # Docker Hub user 或 org
+  GHCR_OWNER: tdcpf              # GHCR user 或 org
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    # 允許上傳 release 資產
+      packages: write    # 允許推送 GHCR
+
+    steps:
+      # 1. Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Set up QEMU
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # 3. Set up Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 5. Login to GHCR
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT || github.token }}
+
+      # 6. Extract metadata (tags & labels)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=ref,event=tag
+            type=ref,event=branch
+
+      # 7. Build and push
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # 8. Save tarball (Docker Hub 版本)
+      - name: Save image tarball
+        run: |
+          docker pull docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          docker save docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} | gzip > image-${{ github.sha }}.tar.gz
+
+      # 9. Upload tarball to Release (only on tag push)
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: image-${{ github.sha }}.tar.gz
