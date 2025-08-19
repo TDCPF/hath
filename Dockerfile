@@ -1,4 +1,4 @@
-FROM ibmjava:sfj-alpine
+FROM eclipse-temurin:8-jre-alpine
 
 LABEL maintainer="notexist@tdcpf.org"
 
