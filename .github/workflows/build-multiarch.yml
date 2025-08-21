@@ -55,7 +55,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=tag
-            type=ref,event=branch
+            #type=semver,pattern={{version}}
 
       # 7. Build and push
       - name: Build and Push
@@ -67,16 +67,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      # 8. Save tarball (Docker Hub 版本)
-      - name: Save image tarball
-        run: |
-          docker pull docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          docker save docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} | gzip > image-${{ github.sha }}.tar.gz
-
-      # 9. Upload tarball to Release (only on tag push)
-      - name: Upload to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: image-${{ github.sha }}.tar.gz
