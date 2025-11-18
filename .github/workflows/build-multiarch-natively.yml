@@ -34,6 +34,7 @@ jobs:
           context: .
           platforms: linux/${{ matrix.arch }}
           push: true
+          provenance: false
           tags: ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.arch }}
 
   create-manifest:
