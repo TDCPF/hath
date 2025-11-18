@@ -49,7 +49,7 @@ jobs:
 
       - name: Create multi-arch manifest
         run: |
-          docker manifest create ghcr.io/${{ github.repository }}:latest \
+          docker manifest create ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest \
             ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-arm64 \
             ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-amd64
           docker manifest push ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest
