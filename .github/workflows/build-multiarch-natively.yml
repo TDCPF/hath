@@ -32,7 +32,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platform: linux/${{ matrix.arch }}
+          platforms: linux/${{ matrix.arch }}
           push: true
           tags: ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.arch }}
 
