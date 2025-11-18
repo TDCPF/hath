@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: hath
-  DOCKERHUB_OWNER: tdcpf         # Docker Hub user 或 org
-  GHCR_OWNER: tdcpf              # GHCR user 或 org
+  IMAGE_NAME: hath               # Image naming, 需小寫
+  DOCKERHUB_OWNER: tdcpf         # Docker Hub user 或 org, 需小寫
+  GHCR_OWNER: tdcpf              # GHCR user 或 org, 需小寫
 
 jobs:
   build-multiarch-natively:
@@ -34,7 +34,7 @@ jobs:
           context: .
           platform: linux/${{ matrix.arch }}
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest-${{ matrix.arch }}
+          tags: ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.arch }}
 
   create-manifest:
     needs: build-multiarch-natively
@@ -50,6 +50,6 @@ jobs:
       - name: Create multi-arch manifest
         run: |
           docker manifest create ghcr.io/${{ github.repository }}:latest \
-            ghcr.io/${{ github.repository }}:latest-arm64 \
-            ghcr.io/${{ github.repository }}:latest-amd64
-          docker manifest push ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-arm64 \
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-amd64
+          docker manifest push ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest
