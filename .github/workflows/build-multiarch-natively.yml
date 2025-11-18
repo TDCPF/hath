@@ -37,7 +37,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest-${{ matrix.arch }}
 
   create-manifest:
-    needs: build-multi-arch-natively
+    needs: build-multiarch-natively
     runs-on: ubuntu-latest
     steps:
       - name: Log in to GitHub Container Registry
