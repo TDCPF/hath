@@ -1,7 +1,6 @@
 name: Build and Push Multi-Arch Image
 
 on:
-  push:
   workflow_dispatch:
 
 env:
