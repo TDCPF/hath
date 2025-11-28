@@ -28,7 +28,7 @@ jobs:
 #            suffixLatest=true
 #            latest=true
     outputs:
-      raw: ${{ steps.meta.outputs }}
+#      raw: ${{ steps.meta.outputs }}
       json: ${{ steps.meta.outputs.json }}
       tags: ${{ steps.meta.outputs.tags }}
       labels: ${{ steps.meta.outputs.labels }}
