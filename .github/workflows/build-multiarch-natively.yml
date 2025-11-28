@@ -32,7 +32,7 @@ jobs:
       json: ${{ steps.meta.outputs.json }}
       tags: ${{ steps.meta.outputs.tags }}
       labels: ${{ steps.meta.outputs.labels }}
-      annotaions: ${{ steps.meta.outputs.annotations }}
+      annotations: ${{ steps.meta.outputs.annotations }}
 
   build-multiarch-natively:
     needs: prepare_metadata
@@ -72,6 +72,8 @@ jobs:
           tags: |
             docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ matrix.arch }}
             ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ matrix.arch }}
+          labels: ${{ needs.prepare_metadata.outputs.labels }}
+          annotations: ${{ needs.prepare_metadata.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
