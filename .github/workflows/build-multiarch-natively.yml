@@ -82,15 +82,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Create multi-arch manifest (docker manifest way)
+      - name: Create and push multi-arch manifest (docker manifest way)
         run: |
           docker manifest create docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 \
             docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          docker manifest push docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker manifest create ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 \
             ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
-          docker manifest push docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker manifest push ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       #- name: Create multi-arch manifest (buildx way)
