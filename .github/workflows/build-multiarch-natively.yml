@@ -9,7 +9,33 @@ env:
   GHCR_OWNER: tdcpf              # GHCR user 或 org, 需小寫
 
 jobs:
+  prepare_metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Composite Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+#          flavor: |
+#            suffix=-${{ matrix.arch }}
+#            suffixLatest=true
+#            latest=true
+    outputs:
+      raw: ${{ steps.meta.outputs }}
+      json: ${{ steps.meta.outputs.json }}
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
+      annotaions: ${{ steps.meta.outputs.annotations }}
+
   build-multiarch-natively:
+    needs: prepare_metadata
     strategy:
       matrix:
         arch: [arm64, amd64]
@@ -33,22 +59,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-
-#      - name: Composite Docker metadata
-#        id: meta
-#        uses: docker/metadata-action@v5
-#        with:
-#          images: |
-#            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
-#            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
-#          tags: |
-#            type=sha
-#            type=ref,event=tag
-#            type=semver,pattern={{version}}
-#          flavor: |
-#            suffix=-${{ matrix.arch }}
-#            suffixLatest=true
-#            latest=true
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
