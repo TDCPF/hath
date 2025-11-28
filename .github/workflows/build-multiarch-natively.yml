@@ -34,19 +34,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
-            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-          flavor: |
-            suffix=-${{ matrix.arch }}
+#      - name: Composite Docker metadata
+#        id: meta
+#        uses: docker/metadata-action@v5
+#        with:
+#          images: |
+#            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
+#            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
+#          tags: |
+#            type=sha
+#            type=ref,event=tag
+#            type=semver,pattern={{version}}
+#          flavor: |
+#            suffix=-${{ matrix.arch }}
+#            suffixLatest=true
+#            latest=true
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -55,8 +57,11 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: true
           provenance: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ matrix.arch }}
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ matrix.arch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -79,9 +84,12 @@ jobs:
 
       - name: Create multi-arch manifest (docker manifest way)
         run: |
-          docker manifest create ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest \
-            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-arm64 \
-            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest-amd64
-          docker manifest push ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest
+          docker manifest create docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 \
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          docker manifest create ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 \
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+#          docker manifest push ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}:latest
 
       #- name: Create multi-arch manifest (buildx way)
