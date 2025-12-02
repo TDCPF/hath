@@ -11,8 +11,8 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write    # 允許推送 GHCR
+#    permissions:
+#      packages: write    # 允許推送 GHCR
 
     steps:
       # 1. Checkout
