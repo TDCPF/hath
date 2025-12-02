@@ -53,14 +53,14 @@ jobs:
           tags: |
             type=sha
             type=ref,event=tag
-            #type=semver,pattern={{version}}
+            type=semver,pattern={{version}}
 
       # 7. Build and push
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+#          context: .
+#          file: ./Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
