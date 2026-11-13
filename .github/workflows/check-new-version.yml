@@ -1,0 +1,91 @@
+name: Check new H@H version
+
+# Daily: compare Dockerfile's HatH_VERSION with the version snapshot API.
+# When a newer version exists, open a DRAFT PR that bumps HatH_VERSION and leaves the SHA256 as a
+# placeholder (build fails on purpose until it is replaced with the official checksum).
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+env:
+  VERSION_API: https://tdcpf.github.io/hath-version/api/latest.json
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect newer version
+        id: detect
+        run: |
+          curl -fsSL --retry 3 "$VERSION_API" -o "$RUNNER_TEMP/latest.json"
+          new=$(jq -r '.version' "$RUNNER_TEMP/latest.json")
+          link=$(jq -r '.download_link' "$RUNNER_TEMP/latest.json")
+          cur=$(sed -n 's/^ENV HatH_VERSION //p' Dockerfile)
+
+          # The API is external data: accept only the expected shapes.
+          [[ "$new" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Unexpected version: $new" >&2; exit 1; }
+          [[ "$cur" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Cannot read current version: $cur" >&2; exit 1; }
+          [[ "$link" =~ ^https://[a-z0-9.-]+\.e-hentai\.org/hath/HentaiAtHome_[0-9.]+\.zip$ ]] \
+            || { echo "Unexpected download link: $link" >&2; exit 1; }
+
+          echo "current=$cur latest=$new"
+          if [ "$cur" != "$new" ] && [ "$(printf '%s\n%s\n' "$cur" "$new" | sort -V | tail -n1)" = "$new" ]; then
+            if [ -n "$(gh pr list --state all --head "update/hath-$new" --json number --jq '.[].number')" ]; then
+              echo "A PR for $new already exists (open or closed), skipping."
+              echo "update=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "update=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "update=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Open draft PR
+        if: steps.detect.outputs.update == 'true'
+        run: |
+          new="$NEW"
+          json="$RUNNER_TEMP/latest.json"
+          branch="update/hath-$new"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          sed -i \
+            -e "s/^ENV HatH_VERSION .*/ENV HatH_VERSION $new/" \
+            -e "s/^ENV HatH_DOWNLOAD_SHA256 .*/ENV HatH_DOWNLOAD_SHA256 TODO_FILL_SHA256/" \
+            Dockerfile
+          git commit -am "Update to $new" -m "Placeholder SHA256, to be replaced with the official checksum."
+          git push origin "$branch"
+
+          {
+            echo "H@H $new was published on $(jq -r '.date' "$json") (tags: $(jq -r '.tags | join(", ")' "$json"))."
+            echo
+            echo "Download: $(jq -r '.download_link' "$json")"
+            echo
+            echo "## TODO before merging"
+            echo "- [ ] Replace \`TODO_FILL_SHA256\` in the Dockerfile with the checksum from the Hentai@Home Clients dashboard."
+            echo "- [ ] Mark this PR as ready for review."
+            echo
+            echo "## Release notes (verbatim from the version API, untrusted text)"
+            echo
+            echo '```text'
+            jq -r '.notes' "$json"
+            echo '```'
+          } > "$RUNNER_TEMP/body.md"
+
+          gh pr create --draft --base "${{ github.event.repository.default_branch }}" --head "$branch" \
+            --title "Update to $new" --body-file "$RUNNER_TEMP/body.md"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW: ${{ steps.detect.outputs.new }}
