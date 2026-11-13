@@ -1,6 +1,131 @@
-on: workflow_dispatch
+name: Build and Push Multi-Arch Image
+
+# Native multi-arch build: each platform is built on a runner of its own architecture
+# (no QEMU), pushed by digest only, then merged into one multi-arch manifest per registry.
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: hath               # lowercase
+  DOCKERHUB_OWNER: tdcpf         # Docker Hub user or org, lowercase
+  GHCR_OWNER: tdcpf              # GHCR user or org, lowercase
+
+permissions:
+  contents: read
+
 jobs:
-  the_simplest_job:
-    runs-on: ubuntu-24.04-arm
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write    # push to GHCR with GITHUB_TOKEN
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Extract Docker metadata (labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}
+
+      # Push by digest only; tags are applied once in the merge job.
+      # provenance/sbom off so each digest is a plain image manifest, not an index.
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+          outputs: type=image,"name=docker.io/${{ env.DOCKERHUB_OWNER }}/${{ env.IMAGE_NAME }},ghcr.io/${{ env.GHCR_OWNER }}/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Tags: latest, v<HatH_VERSION from Dockerfile> (same as the old hooks/post_push), sha-<short>
+      - name: Create and push multi-arch manifests
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          version=$(sed -n 's/^ENV HatH_VERSION //p' "$GITHUB_WORKSPACE/Dockerfile")
+          [ -n "$version" ] || { echo "HatH_VERSION not found in Dockerfile" >&2; exit 1; }
+          for image in "docker.io/$DOCKERHUB_OWNER/$IMAGE_NAME" "ghcr.io/$GHCR_OWNER/$IMAGE_NAME"; do
+            docker buildx imagetools create \
+              -t "$image:latest" -t "$image:v$version" -t "$image:sha-${GITHUB_SHA::7}" \
+              $(printf "$image@sha256:%s " *)
+            docker buildx imagetools inspect "$image:v$version"
+          done
