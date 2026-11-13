@@ -1,4 +1,4 @@
-FROM ibmjava:sfj-alpine
+FROM amazoncorretto:8-alpine-jre
 
 LABEL maintainer="notexist@tdcpf.org"
 
@@ -16,6 +16,9 @@ ENV HatH_DOWNLOAD_URL https://repo.e-hentai.org/hath/HentaiAtHome_$HatH_VERSION.
 
 ## Recommend default configuration
 ENV HatH_USER hath
+# Runtime uid:gid the client runs as (container starts as root, chowns HatH_PATH and drops privilege via su-exec)
+ENV HatH_UID 1000
+ENV HatH_GID 1000
 ENV HatH_PATH "/home/$HatH_USER/client"
 ENV HatH_ARCHIVE hath.zip
 ENV HatH_JAR HentaiAtHome.jar
@@ -25,7 +28,8 @@ ENV JAVA_TOOL_OPTIONS "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
 ENV HatH_ARGS --disable_logging
 
 # Container Setup
-RUN adduser -D "$HatH_USER"
+RUN apk add --no-cache su-exec && \
+    adduser -D -u 1000 "$HatH_USER"
 USER "$HatH_USER"
 
 RUN mkdir "$HatH_PATH" && \
@@ -40,6 +44,8 @@ RUN mkdir "$HatH_PATH" && \
     mkdir -p "$HatH_PATH/data" && \
     chmod -R 775 "$HatH_PATH"
 
+# Back to root so CMD can align ownership with HatH_UID/HatH_GID, then drop privilege
+USER root
 WORKDIR "$HatH_PATH"
 
 # Expose the port
@@ -50,5 +56,7 @@ EXPOSE "$HatH_PORT"
 # TODO: HEALTHCHECK
 
 # CMD use with ENTRYPOINT
+# As root: chown HatH_PATH (non-recursive, mounted volumes untouched) and data, then run as HatH_UID:HatH_GID.
+# If started with --user (non-root), skip both and run as-is.
 # write credential $HatH_ID-$HatH_KEY data/client_login
-CMD echo -n $HatH_ID-${HatH_KEY} > $HatH_PATH/data/client_login && java -jar "$HatH_JAR" --port=$HatH_PORT $HatH_ARGS
+CMD P=; if [ "$(id -u)" = 0 ]; then chown "$HatH_UID:$HatH_GID" "$HatH_PATH" "$HatH_PATH/data" || exit 1; P="su-exec $HatH_UID:$HatH_GID"; fi; exec $P sh -c 'echo -n $HatH_ID-${HatH_KEY} > $HatH_PATH/data/client_login && exec java -jar "$HatH_JAR" --port=$HatH_PORT $HatH_ARGS'
