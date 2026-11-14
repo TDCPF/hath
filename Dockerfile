@@ -53,7 +53,11 @@ EXPOSE "$HatH_PORT"
 
 #VOLUME ["$HatH_PATH/cache", "$HatH_PATH/data", "$HatH_PATH/download"]
 
-# TODO: HEALTHCHECK
+# Healthy = the client's HTTPS service accepts outside connections, which only happens after the startup
+# notification to the H@H server succeeded. The cert is issued for H@H's own hostname, so skip verification.
+# start-period is generous since the first start may rescan a large cache.
+HEALTHCHECK --interval=60s --timeout=10s --start-period=5m --retries=3 \
+  CMD wget -q -O /dev/null --no-check-certificate "https://localhost:$HatH_PORT/robots.txt"
 
 # CMD use with ENTRYPOINT
 # As root: chown HatH_PATH (non-recursive, mounted volumes untouched) and data, then run as HatH_UID:HatH_GID.
