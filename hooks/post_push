@@ -1,6 +1,0 @@
-#!/bin/bash
-
-export HatH_VERSION=$(docker run --rm $IMAGE_NAME sh -c 'echo $HatH_VERSION')
-
-docker tag $IMAGE_NAME $DOCKER_REPO:v$HatH_VERSION
-docker push $DOCKER_REPO:v$HatH_VERSION

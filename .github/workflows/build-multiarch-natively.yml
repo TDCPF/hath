@@ -117,11 +117,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      # Tags: latest, v<HatH_VERSION from Dockerfile> (same as the old hooks/post_push), sha-<short>
+      # Tags: latest, v<HatH_VERSION from Dockerfile> (the Docker Hub tag scheme used before), sha-<short>
       - name: Create and push multi-arch manifests
         working-directory: ${{ runner.temp }}/digests
         run: |
-          version=$(sed -n 's/^ENV HatH_VERSION //p' "$GITHUB_WORKSPACE/Dockerfile")
+          version=$(sed -n 's/^ARG HatH_VERSION=//p' "$GITHUB_WORKSPACE/Dockerfile")
           [ -n "$version" ] || { echo "HatH_VERSION not found in Dockerfile" >&2; exit 1; }
           for image in "docker.io/$DOCKERHUB_OWNER/$IMAGE_NAME" "ghcr.io/$GHCR_OWNER/$IMAGE_NAME"; do
             docker buildx imagetools create \

@@ -4,10 +4,11 @@ It has been verified in the Docker environment of Synology DSM and should work f
 
 
 ## ENV explanation:
-- Build related:
+- Build related (build args, they exist only while building and are not carried into the container environment):
   - HatH_VERSION: HatH version used to compose the download URL and note. It should be x.y.z most of the time.
   - HatH_DOWNLOAD_URL: HatH download URL. Should not be modified most of the time.
   - HatH_DOWNLOAD_SHA256: SHA256 hash provided at [Hentai@Home Clients dashboard](https://e-hentai.org/hentaiathome.php), used for file integrity check.
+  - HatH_ARCHIVE: The filename HatH_DOWNLOAD_URL will be downloaded as.
 - Execution related:
   - HatH_ID: **DO NOT FILL YOUR INFO IF YOU ARE GOING TO BUILD PUBLIC IMAGE.** The 5-digit (at the time) "Client ID#" you get from Tenboro.
   - HatH_KEY: **DO NOT FILL YOUR INFO IF YOU ARE GOING TO BUILD PUBLIC IMAGE.** The "Client Key" you get from the corresponding client configuration page at the [Hentai@Home Clients dashboard](https://e-hentai.org/hentaiathome.php).
@@ -17,7 +18,6 @@ It has been verified in the Docker environment of Synology DSM and should work f
 - Execution related but recommend not to modify:
   - HatH_USER: The username which will be created in the image (with uid 1000).
   - HatH_PATH: The path the extracted HatH client will be deployed to.
-  - HatH_ARCHIVE: The filename HatH_DOWNLOAD_URL will be downloaded as.
   - HatH_JAR: The filename of the HatH client (inside the archive).
   - HatH_ARGS: The parameters passed to the HatH client. The list can be found at the [Hentai@Home wiki](https://ehwiki.org/wiki/Hentai@Home#Software).
 
@@ -25,6 +25,10 @@ It has been verified in the Docker environment of Synology DSM and should work f
 ## Self build:
 ```
 docker build -t hath:tagwhateveryoulike ./
+```
+To build another HatH version without editing the Dockerfile, override the build args:
+```
+docker build --build-arg HatH_VERSION=x.y.z --build-arg HatH_DOWNLOAD_SHA256=<sha256> -t hath:tagwhateveryoulike ./
 ```
 
 

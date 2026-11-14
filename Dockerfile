@@ -9,10 +9,11 @@ ENV HatH_KEY 20chars&numscombiKEY
 ## Common settings
 ENV HatH_PORT 9527
 
-## Fetch binary
-ENV HatH_VERSION 1.6.6
-ENV HatH_DOWNLOAD_SHA256 55a47790072384cac3c218503c0296295530eeee2d5c82e52398eff5c7fbccb5
-ENV HatH_DOWNLOAD_URL https://repo.e-hentai.org/hath/HentaiAtHome_$HatH_VERSION.zip
+## Fetch binary (build args only: not carried into the container environment)
+ARG HatH_VERSION=1.6.6
+ARG HatH_DOWNLOAD_SHA256=55a47790072384cac3c218503c0296295530eeee2d5c82e52398eff5c7fbccb5
+ARG HatH_DOWNLOAD_URL=https://repo.e-hentai.org/hath/HentaiAtHome_${HatH_VERSION}.zip
+ARG HatH_ARCHIVE=hath.zip
 
 ## Recommend default configuration
 ENV HatH_USER hath
@@ -20,7 +21,6 @@ ENV HatH_USER hath
 ENV HatH_UID 1000
 ENV HatH_GID 1000
 ENV HatH_PATH "/home/$HatH_USER/client"
-ENV HatH_ARCHIVE hath.zip
 ENV HatH_JAR HentaiAtHome.jar
 ENV JAVA_TOOL_OPTIONS "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8" 
 # Hentai@Home parameters: https://ehwiki.org/wiki/Hentai@Home#Software

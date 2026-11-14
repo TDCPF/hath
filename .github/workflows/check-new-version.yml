@@ -28,7 +28,7 @@ jobs:
           curl -fsSL --retry 3 "$VERSION_API" -o "$RUNNER_TEMP/latest.json"
           new=$(jq -r '.version' "$RUNNER_TEMP/latest.json")
           link=$(jq -r '.download_link' "$RUNNER_TEMP/latest.json")
-          cur=$(sed -n 's/^ENV HatH_VERSION //p' Dockerfile)
+          cur=$(sed -n 's/^ARG HatH_VERSION=//p' Dockerfile)
 
           # The API is external data: accept only the expected shapes.
           [[ "$new" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Unexpected version: $new" >&2; exit 1; }
@@ -62,8 +62,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
           sed -i \
-            -e "s/^ENV HatH_VERSION .*/ENV HatH_VERSION $new/" \
-            -e "s/^ENV HatH_DOWNLOAD_SHA256 .*/ENV HatH_DOWNLOAD_SHA256 TODO_FILL_SHA256/" \
+            -e "s/^ARG HatH_VERSION=.*/ARG HatH_VERSION=$new/" \
+            -e "s/^ARG HatH_DOWNLOAD_SHA256=.*/ARG HatH_DOWNLOAD_SHA256=TODO_FILL_SHA256/" \
             Dockerfile
           git commit -am "Update to $new" -m "Placeholder SHA256, to be replaced with the official checksum."
           git push origin "$branch"
